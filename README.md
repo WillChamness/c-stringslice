@@ -2,7 +2,7 @@
 This repository contains a single-header file for slicing a C string and interacting with that slice.
 
 # Usage
-To import the function declarations, simply add the following line to your C file:
+Download the `stringslice.h` file and add it into your project. To import the function declarations, simply add the following line to your C file:
 ```
 #include "stringslice.h"
 ```
