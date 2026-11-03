@@ -6,7 +6,7 @@ To import the function declarations, simply add the following line to your C fil
 ```
 #include "stringslice.h"
 ```
-If you want the implementation included, you must declare `STRINGSLICE_LIB_IMPLEMENTATION` macro prior to including the header file.
+If you want the implementation included, you must declare the `STRINGSLICE_LIB_IMPLEMENTATION` macro prior to including the header file.
 For example:
 ```
 #define STRINGSLICE_LIB_IMPLEMENTATION
