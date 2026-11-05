@@ -115,7 +115,7 @@ StrSlice slcslice(StrSlice s, size_t start, size_t stop);
  * @param out The output
  * @param next The next string to split using the delimiter
  */
-void slcsplit(StrSlice in, char delim, StrSlice *out, StrSlice *next);
+void slcsplit(StrSlice in, const char *delim, StrSlice *out, StrSlice *next);
 
 /*
  * Lexicographically compares the slices.
@@ -323,18 +323,25 @@ StrSlice slcslice(StrSlice s, size_t start, size_t stop) {
    return slcdrop(slctake(s, stop), start);
 }
 
-void slcsplit(StrSlice in, char delim, StrSlice *out, StrSlice *next) {
-   if(out == NULL || next == NULL)
+void slcsplit(StrSlice in, const char *delim, StrSlice *out, StrSlice *next) {
+   if(delim == NULL || out == NULL || next == NULL)
       return;
+
+   size_t delim_len = 0;
+   while(delim[delim_len] != '\0')
+      delim_len++;
 
    size_t i;
    for(i = 0; i < in.len; i++) {
-      if(in.s[i] == delim)
+      StrSlice current = slcslice(in, i, i + delim_len);
+      if(slccmpstr(current, delim) == 0)
          break;
    }
 
    if(i == in.len) {
-      // "1234567".split('.')
+      // "1234567".split(",.")
+      //          ^
+      //          i
       // *out == "1234567"
       // *next == ""
       out->s = in.s;
@@ -343,21 +350,23 @@ void slcsplit(StrSlice in, char delim, StrSlice *out, StrSlice *next) {
       next->len = 0;
    }
    else {
-      // "123.45678".split('.')
+      // "123,.45678".split(",.")
       //     ^
       //     i
+      // delim_len == 2
       // *out == "123"
       // *next == "45678"
       //
-      // "12345678.".split('.')
+      // "12345678,.".split(",.")
       //          ^
       //          i
+      // delim_len == 2
       // *out == "12345678"
       // *next == ""
       out->s = in.s;
       out->len = i;
-      next->s = in.s + i + 1;
-      next->len = in.len - i - 1;
+      next->s = in.s + i + delim_len;
+      next->len = in.len - i - delim_len;
    }
 }
 
@@ -548,7 +557,7 @@ ParseDoubleResult slcparse_double(StrSlice s) {
    result.ok = TRUE;
 
    StrSlice integer, fraction;
-   slcsplit(s, '.', &integer, &fraction);
+   slcsplit(s, ".", &integer, &fraction);
    if(integer.len == 0 || (integer.len == 1 && integer.s[0] == '-')) {
       result.ok = FALSE;
       return result;

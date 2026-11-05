@@ -164,41 +164,54 @@ void test_subslice() {
 
 void test_split() {
    StrSlice in, out, next;
+   int i;
 
-   in = strborrow("1.2.3.4.5.6.7.8.9.10");
-   char *expected[] = {"1","2","3","4","5","6","7","8","9","10"};
-   int i = 0;
+   char *expected[] = {"", "abc", "d", "ef", "123456789", "", "hello world"};
+   int expected_len = 7;
+   in = strborrow(".abc.d.ef.123456789..hello world");
+   i = 0;
    do {
-      slcsplit(in, '.', &out, &next);
+      slcsplit(in, ".", &out, &next);
       in = next;
 
       assert(slccmpstr(out, expected[i]) == 0);
       i++;
    } while(next.len > 0);
-   assert(i == 10);
+   assert(i == expected_len);
+
+   in = strborrow("...abc...d...ef...123456789......hello world");
+   i = 0;
+   do {
+      slcsplit(in, "...", &out, &next);
+      in = next;
+
+      assert(slccmpstr(out, expected[i]) == 0);
+      i++;
+   } while(next.len > 0);
+   assert(i == expected_len);
 
    in = strborrow("hello, world");
-   int j = 0;
+   i = 0;
    do {
-      slcsplit(in, '.', &out, &next);
+      slcsplit(in, ".", &out, &next);
       in = next;
 
-      j++;
+      i++;
    } while(next.len > 0);
-   assert(j == 1);
+   assert(i == 1);
    assert(slccmpstr(out, "hello, world") == 0);
 
-   char s[] = "hello again, world.";
-   in = strborrow(s);
-   int k = 0;
+   in = strborrow("hello again, world!!!");
+   i = 0;
    do {
-      slcsplit(in, '.', &out, &next);
+      slcsplit(in, "!!!", &out, &next);
       in = next;
 
-      k++;
+      i++;
    } while(next.len > 0);
-   assert(k == 1);
-   assert(slccmp(out, slcinit(strborrow(s))) == 0);
+   assert(i == 1);
+   assert(slccmpstr(out, "hello again, world") == 0);
+
 }
 
 void test_contains() {
