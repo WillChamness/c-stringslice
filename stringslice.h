@@ -96,7 +96,7 @@ StrSlice slctake(StrSlice s, size_t n);
 StrSlice slcdrop(StrSlice s, size_t n);
 
 /*
- * Takes a slice of the slice or returns an empty slice.
+ * Takes a slice of the slice or returns an empty slice
  * if the inputs are invalid
  * @param s The slice to slice further
  * @param start The starting index of the slice, inclusive
