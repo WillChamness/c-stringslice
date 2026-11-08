@@ -39,11 +39,26 @@ StrSlice strborrow(const char *null_terminated_str);
 /*
  * Creates a slice of the first n characters or until the null character is reached. 
  * The string must not be freed while the slice is being used.
+ * 
+ * Time complexity is O(n).
  * @param str The string
  * @param n The number of characters to include in the slice
  * @return A slice of the string
  */
 StrSlice strnborrow(const char *str, size_t n);
+
+/*
+ *  Creates a slice of the first n characters of the string. The string must not be
+ *  freed while the slice is being used. Similar to strnborrow(), but does not 
+ *  check for the null character. Useful when the length of the buffer is already
+ *  known ahead of time.
+ *
+ *  Time complexity is O(1).
+ *  @param buf The string
+ *  @param len The length of the
+ *  @return A slice of the string
+ */
+StrSlice slcnew(const char *str, size_t len);
 
 /*
  * Gets the first character of the slice.
@@ -145,12 +160,20 @@ int slccmpstr(StrSlice slice, const char *null_terminated_str);
 int slcncmpstr(StrSlice slice, const char *str, size_t n);
 
 /*
- * Searches the slice for the character.
+ * Searches the slice for the substring.
  * @param s The slice to search
- * @param target The character to search for 
+ * @param target The substring to search for 
  * @return True if the slice contains the target; otherwise, false
  */
-int slccontains(StrSlice s, char target);
+int slccontains(StrSlice s, const char *target);
+
+/*
+ * Gets a slice containing the first instance of the target, if it is found.
+ * @param s The slice to search
+ * @param The substring to search for
+ * @return A subslice of s that contains the target if it is found; otherwise, and empty slice
+ */
+StrSlice slcsubstr(StrSlice s, const char *target);
 
 /*
  * Copies all of the characters in the string to the buffer and writes
@@ -244,9 +267,23 @@ StrSlice strnborrow(const char *str, size_t n) {
    return result;
 }
 
+StrSlice slcnew(const char *str, size_t len) {
+   StrSlice result;
+   if(str == NULL) {
+      result.s = NULL;
+      result.len = 0;
+   }
+   else {
+      result.s = str;
+      result.len = len;
+   }
+
+   return result;
+}
+
 char slchead(StrSlice s) {
    if(s.len == 0) {
-      fputs("Unrecoverable error: slchead: cannot take the head of an empty slice\n", stderr);
+      fputs("Unrecoverable error: slchead: StrSlice is empty\n", stderr);
       exit(1);
    }
 
@@ -255,7 +292,7 @@ char slchead(StrSlice s) {
 
 StrSlice slctail(StrSlice s) {
    if(s.len == 0) {
-      fputs("Unrecoverable error: slctail: cannot take the tail of an empty slice\n", stderr);
+      fputs("Unrecoverable error: slctail: StrSlice is empty\n", stderr);
       exit(1);
    }
 
@@ -268,7 +305,7 @@ StrSlice slctail(StrSlice s) {
 
 char slclast(StrSlice s) {
    if(s.len == 0) {
-      fputs("Unrecoverable error: slclast: cannot take the last character of an empty slice\n", stderr);
+      fputs("Unrecoverable error: slclast: StrSlice is empty\n", stderr);
       exit(1);
    }
 
@@ -277,7 +314,7 @@ char slclast(StrSlice s) {
 
 StrSlice slcinit(StrSlice s) {
    if(s.len == 0) {
-      fputs("Unrecoverable error: slcinit: cannot take the init of an empty slice\n", stderr);
+      fputs("Unrecoverable error: slcinit: StrSlice is empty\n", stderr);
       exit(1);
    }
 
@@ -426,15 +463,44 @@ int slcncmpstr(StrSlice slice, const char *str, size_t n) {
       return 0;
 }
 
-int slccontains(StrSlice s, char target) {
+int slccontains(StrSlice s, const char *target) {
    const int TRUE = 1;
    const int FALSE = 0;
+
+   if(target == NULL)
+      return FALSE;
+
+   size_t target_len = 0;
+   while(target[target_len] != '\0')
+      target_len++;
+
    for(size_t i = 0; i < s.len; i++) {
-      if(s.s[i] == target)
+      StrSlice current = slcslice(s, i, i + target_len);
+      if(slccmpstr(current, target) == 0)
          return TRUE;
    }
 
    return FALSE;
+}
+
+StrSlice slcsubstr(StrSlice s, const char *target) {
+   const int TRUE = 1;
+   const int FALSE = 0;
+
+   size_t target_len;
+   while(target[target_len] != '\0')
+      target_len++;
+
+   StrSlice result;
+   for(size_t i = 0; i < s.len; i++) {
+      result = slcslice(s, i, i + target_len);
+      if(slccmpstr(result, target) == 0)
+         return result;
+   }
+
+   result.s = s.s;
+   result.len = 0;
+   return result;
 }
 
 void slccpy(char *dst, StrSlice src) {

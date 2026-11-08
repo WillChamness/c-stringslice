@@ -32,6 +32,20 @@ void test_borrow() {
    assert(s4.len == 0);
 }
 
+void test_new() {
+   char hello[] = "hello";
+   StrSlice s1 = slcnew(string, strlen(string));
+   StrSlice s2 = slcnew(string, 5);
+   assert(s1.len == strlen(string));
+   assert(s2.len == strlen(hello));
+
+   for(int i = 0; i < s1.len; i++)
+      assert(s1.s[i] == string[i]);
+
+   for(int i = 0; i < s2.len; i++)
+      assert(s2.s[i] == hello[i]);
+}
+
 void test_compare_slice_eq() {
    char string_cpy[100];
    strcpy(string_cpy, string);
@@ -216,24 +230,50 @@ void test_split() {
 
 void test_contains() {
    StrSlice s = strborrow(string);
-   assert(slccontains(s, 'h'));
-   assert(slccontains(s, 'e'));
-   assert(slccontains(s, 'l'));
-   assert(slccontains(s, 'l'));
-   assert(slccontains(s, 'o'));
-   assert(slccontains(s, ' '));
-   assert(slccontains(s, 'w'));
-   assert(slccontains(s, 'o'));
-   assert(slccontains(s, 'r'));
-   assert(slccontains(s, 'l'));
-   assert(slccontains(s, 'd'));
+   assert(slccontains(s, "h"));
+   assert(slccontains(s, "e"));
+   assert(slccontains(s, "l"));
+   assert(slccontains(s, "l"));
+   assert(slccontains(s, "o"));
+   assert(slccontains(s, " "));
+   assert(slccontains(s, "w"));
+   assert(slccontains(s, "o"));
+   assert(slccontains(s, "r"));
+   assert(slccontains(s, "l"));
+   assert(slccontains(s, "d"));
+   assert(slccontains(s, "hello"));
+   assert(slccontains(s, "world"));
 }
 
 void test_not_contains() {
    StrSlice s = strborrow(string);
-   assert(!slccontains(s, 'q'));
-   for(char c = '\0'; c < '\0' + 127; c++) // check all ascii characters
-      assert(!slccontains(EMPTY_SLICE, c));
+   assert(!slccontains(s, "q"));
+   assert(!slccontains(s, "goodbye"));
+   for(char c = '\0'; c < '\0' + 127; c++) { // check all ascii characters
+      char s[2];
+      s[0] = c;
+      s[1] = '\0';
+      assert(!slccontains(EMPTY_SLICE, s));
+   } 
+   assert(!slccontains(EMPTY_SLICE, string));
+}
+
+void test_substring() {
+   char needle[] = "123";
+   StrSlice haystack = strborrow("hello123world");
+   StrSlice substr = slcsubstr(haystack, needle);
+
+   assert(substr.len == 3);
+   assert(slccmpstr(substr, needle) == 0);
+   assert(slccmp(slcslice(haystack, strlen("hello"), strlen("hello123")), substr) == 0);
+
+   substr = slcsubstr(haystack, "not found");
+   assert(substr.len == 0);
+
+   substr = slcsubstr(haystack, "super long string that is very very long");
+   assert(substr.len == 0);
+
+   assert(slcsubstr(EMPTY_SLICE, string).len == 0);
 }
 
 void test_copy() {
@@ -316,6 +356,7 @@ void test_parse_double() {
 
 int main() {
    test_borrow();
+   test_new();
 
    test_compare_slice_eq();
    test_compare_slice_lt();
