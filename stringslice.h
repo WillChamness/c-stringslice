@@ -168,12 +168,20 @@ int slcncmpstr(StrSlice slice, const char *str, size_t n);
 int slccontains(StrSlice s, const char *target);
 
 /*
- * Gets a slice containing the first instance of the target, if it is found.
+ * Gets a slice containing the first instance of the target if it is found.
  * @param s The slice to search
  * @param The substring to search for
- * @return A subslice of s that contains the target if it is found; otherwise, and empty slice
+ * @return A subslice of s that contains the target if it is found; otherwise, an empty slice
  */
 StrSlice slcsubstr(StrSlice s, const char *target);
+
+/*
+ * Gets a slice containing the first instance of the target if it is found, ignoring case
+ * @param s The slice to search
+ * @param The substring to search for
+ * @return A subslice of s that contains the target if it is found; otherwise, an empty slice
+ */
+StrSlice slcsubstr_ignorecase(StrSlice s, const char *target);
 
 /*
  * Copies all of the characters in the string to the buffer and writes
@@ -484,23 +492,64 @@ int slccontains(StrSlice s, const char *target) {
 }
 
 StrSlice slcsubstr(StrSlice s, const char *target) {
-   const int TRUE = 1;
-   const int FALSE = 0;
+   StrSlice not_found;
+   size_t target_len = 0;
 
-   size_t target_len;
+   not_found.s = s.s;
+   not_found.len = 0;
+
+   if(target == NULL)
+      return not_found;
    while(target[target_len] != '\0')
       target_len++;
 
-   StrSlice result;
    for(size_t i = 0; i < s.len; i++) {
-      result = slcslice(s, i, i + target_len);
-      if(slccmpstr(result, target) == 0)
-         return result;
+      StrSlice curr = slcslice(s, i, i + target_len);
+      if(slccmpstr(curr, target) == 0)
+         return curr;
    }
 
-   result.s = s.s;
-   result.len = 0;
-   return result;
+   return not_found;
+}
+
+StrSlice slcsubstr_ignorecase(StrSlice s, const char *target) {
+   const int TRUE = 1;
+   const int FALSE = 0;
+   const unsigned int ASCII_OFFSET = 32;
+   StrSlice not_found;
+   size_t target_len = 0;
+
+   not_found.s = s.s;
+   not_found.len = 0;
+
+   if(target == NULL)
+      return not_found;
+   while(target[target_len] != '\0')
+      target_len++;
+
+   for(size_t i = 0; i < s.len; i++) {
+      StrSlice curr = slcslice(s, i, i + target_len);
+      if(curr.len != target_len) // curr is at end of string
+         break;
+
+      for(size_t j = 0; j < curr.len; j++) {
+         char curr_c = curr.s[j];
+         char target_c = target[j];
+
+         // convert to lowercase
+         if('A' <= curr_c && curr_c <= 'Z')
+            curr_c += ASCII_OFFSET;
+         if('A' <= target_c && target_c <= 'Z')
+            target_c += ASCII_OFFSET;
+
+         if(curr_c != target_c)
+            break;
+         else if(j == curr.len - 1) // all characters in curr match target
+            return curr;
+      }
+   }
+
+   return not_found;
 }
 
 void slccpy(char *dst, StrSlice src) {

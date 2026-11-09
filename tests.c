@@ -259,7 +259,7 @@ void test_not_contains() {
 }
 
 void test_substring() {
-   char needle[] = "123";
+   char *needle = "123";
    StrSlice haystack = strborrow("hello123world");
    StrSlice substr = slcsubstr(haystack, needle);
 
@@ -274,6 +274,47 @@ void test_substring() {
    assert(substr.len == 0);
 
    assert(slcsubstr(EMPTY_SLICE, string).len == 0);
+}
+
+void test_substring_ignorecase() {
+   char *needle = "123";
+   StrSlice haystack = strborrow("hello123world");
+   StrSlice substr = slcsubstr_ignorecase(haystack, needle);
+
+   assert(substr.len == 3);
+   assert(slccmpstr(substr, needle) == 0);
+   assert(slccmpstr(substr, "123") == 0);
+
+   substr = slcsubstr_ignorecase(haystack, "not found");
+   assert(substr.len == 0);
+
+   substr = slcsubstr_ignorecase(haystack, "super long string that is very very long");
+   assert(substr.len == 0);
+
+   assert(slcsubstr_ignorecase(EMPTY_SLICE, string).len == 0);
+
+   needle = "LlO1";
+   substr = slcsubstr_ignorecase(haystack, needle);
+   assert(substr.len == 4);
+   assert(slccmpstr(substr, "llo1") == 0);
+
+   haystack = strborrow("HeLlo WoRlD");
+   needle = "lo world";
+   substr = slcsubstr_ignorecase(haystack, needle);
+   assert(substr.len == strlen(needle));
+   for(size_t i = 0; i < substr.len; i++) {
+      const int ASCII_OFFSET = 32;
+      char substr_c = needle[i];
+      char needle_c = needle[i];
+      // convert to lowercase
+      if('A' <= substr_c && substr_c <= 'Z')
+         substr_c += ASCII_OFFSET;
+      if('A' <= needle_c && needle_c <= 'Z')
+         needle_c += ASCII_OFFSET;
+
+      assert(substr_c == needle_c);
+   }
+
 }
 
 void test_copy() {
@@ -381,6 +422,9 @@ int main() {
    
    test_contains();
    test_not_contains();
+
+   test_substring();
+   test_substring_ignorecase(); // todo: add this
 
    test_copy();
    test_n_copy();
