@@ -14,5 +14,19 @@ For example:
 #include "stringslice.h"
 ```
 
+Note that the macro must be declared in exactly one file to prevent linking errors. If multiple files need to include the header, you can
+create a `stringslice.c` file and define the implementations there. For example:
+```
+/* stringslice.c */
+#define STRINGSLICE_LIB_IMPLEMENTATION
+#include "stringslice.h"
+
+/* file1.c */
+#include "stringslice.h"
+
+/* file2.c */
+#include "stringslice.h"
+```
+
 # Documentation
 All documentation is included in the header file as javadoc docstrings.
