@@ -541,8 +541,6 @@ StrSlice slcsubstr(StrSlice s, const char *target) {
 }
 
 StrSlice slcsubstr_ignorecase(StrSlice s, const char *target) {
-   const int TRUE = 1;
-   const int FALSE = 0;
    const unsigned int ASCII_OFFSET = 32;
    StrSlice not_found;
    size_t target_len = 0;
